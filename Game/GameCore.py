@@ -7,7 +7,7 @@ def GenerateCode(Users):
     return str(id(user_one)) + str(id(user_two))
 
 class Game():
-    def __init__(self, users, Board = Board()):
+    def __init__(self, users, Board = Board.Board()):
         self.code = GenerateCode(users)
         self.Board = Board
         self.users = users
