@@ -1,5 +1,6 @@
 
-from flask import Flask, request, url_for
+from cmath import log
+from flask import Flask, g, request, url_for
 from flask import redirect
 import os
 
@@ -15,7 +16,10 @@ app = Flask(__name__)
 def GenerateRandomCode(length = random.randint(8, 16)):
     letters = "01234567890" + string.ascii_letters
     return ''.join(random.choice(letters) for i in range(length))
-    
+
+def GetRandomCicat():
+    return random.choice(open("static/citata.txt", "r", encoding='utf-8').read().split(';'))
+
 @app.route('/', methods=['POST', 'GET'])
 def index():
     ipUser = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
@@ -63,26 +67,35 @@ def Mail():
 @app.route('/game', methods = ['POST', 'GET'])
 def StartGame():
     ipUser = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
-    login = TempJson.GetNameByIP(ipUser)
+    login = DB.UsersDataBase.GetNameByIp(ipUser)
     if request.method == "GET":
-        return open("static/html/game.html", "r", encoding="utf-8").read()
+        return open("static/html/game.html", "r", encoding="utf-8").read().replace("cicata", GetRandomCicat())
     elif request.method == "POST":
-        if (request.form["findgame"]  == "Найти партию"):
-            TempJson.SetUserGame(login, "find")
-            users = TempJson.GetAllPossibleUsers(login)
-            if not users: return open('static/html/waiting.html', 'r', encoding='utf-8').read()
-            user = random.choice(users)
-            htmlCode = open("static/html/startgame.html", "r", encoding="utf-8").read()
-            htmlCode = htmlCode.replace("user", user)
-            TempJson.SetUserGame(login, "found")
-            TempJson.SetUserGame(user, "found")
 
+        if (request.form["findgame"]  == "Найти партию"):
+            users = TempJson.GetAllPossibleUsers(login)
+            selfStatus = TempJson.GetStatus(login)
             
-            gamesNow = TempJson.ImportData("Online.json")["Games"].keys()
-            if not (GenerateCode([user, login]) in gamesNow and GenerateCode([login, user])):
+            if users == [] and selfStatus == "find":
+                TempJson.SetUserGame(login, "find")
+
+                return open('static/html/waiting.html', 'r', encoding='utf-8').read()
+            elif users != [] and selfStatus == "find":
+                user = random.choice(users)
+
+            else:
+                user = TempJson.GetOpponent(login)
+            htmlCode = open("static/html/startgame.html", "r", encoding="utf-8").read()
+
+            htmlCode = htmlCode.replace("user", user)
+
+            gamesNow = TempJson.ImportData("Online.json")["Games"].values()
+            if not [user, login] in gamesNow and not [login, user] in gamesNow:
                 game = Game([user, login])
+                TempJson.SetUserGame(login, "found")
+                TempJson.SetUserGame(user, "found")
                 TempJson.AddGame(game)
-    
+
             return htmlCode
         return "1"
        
