@@ -1,4 +1,4 @@
-from Pieces import Piece, ValidMove, King
+from .Pieces import Piece, ValidMove, King
 from colorama import init
 from termcolor import colored
 init()
