@@ -1,4 +1,5 @@
 
+from curses.ascii import US
 import json
 
 from regex import D
@@ -11,12 +12,13 @@ def ImportData(path = PATH_TO_JSON_TEMP):
     return data
 
 def AddGame(Game):
-    data = ImportData("Online.json")["Games"]
-    
-    data[Game.code] = Game.users
+    data = ImportData("Online.json")
+    games = data["Games"]
+    games[Game.code] = Game.users
 
+    data["Games"] = games
     SaveData(data, "Online.json")
-    
+
 def SaveData(data, PATH = PATH_TO_JSON_TEMP):
     with open(PATH, "w") as TempUser:
         json.dump(data, TempUser, indent=4)
@@ -27,11 +29,29 @@ def DeleteUser(idUser):
     SaveData(data)
 
 def GetNameByIP(idUser: str = "NoneIp"):
-    
     for user, info in ImportData().items():
         if info["ip"] == idUser:
             return user
     return ""
+
+def GetStatus(idUser: str = "NoneIp"):
+
+    Users = ImportData("Online.json")["Users"]
+
+    for user, status in Users.items():
+        if user == idUser:
+            return status
+
+    return "find"
+
+def GetOpponent(idUser: str = "None"):
+    Games = ImportData("Online.json")["Games"]
+
+    for userone, usertwo in Games.values():
+        if userone == idUser:
+            return usertwo
+        elif usertwo == idUser:
+            return userone
 
 def GetPropertyUser(idUser: str = "NoneIp", property: str = "EmptyProperty"):
     return ImportData()[idUser][property]
@@ -52,8 +72,10 @@ def GetAllPossibleUsers(ipUser: str = "None"):
 
 def SetUserGame(ip: str = "NoneId", property: str = "None"):
     data = ImportData("Online.json")
-    data["Users"][ip] = property
-    
+    users = data["Users"]
+    users[ip] = property
+    data["Users"] = users
+
     SaveData(data, "Online.json")
 
 def AddProperty(ip: str = "NoneId", property: str = "EmptyProperty", value: str = "None"):
