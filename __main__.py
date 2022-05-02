@@ -1,15 +1,15 @@
 
-from cmath import log
-from flask import Flask, g, request, url_for
+from flask import Flask, request, url_for
 from flask import redirect
 import os
 
-from Game.GameCore import Game, GenerateCode
+from Game.GameCore import Game
 from Users import DB
 from Users.JSON import TempJson
 from Users.DB import UsersDataBase
 from Users.Mails import SendMail
 import random, string
+from Game.GameCore import Board
 
 app = Flask(__name__)
 
@@ -88,17 +88,51 @@ def StartGame():
             htmlCode = open("static/html/startgame.html", "r", encoding="utf-8").read()
 
             htmlCode = htmlCode.replace("user", user)
-
+            htmlCode = htmlCode.replace("game", "")
             gamesNow = TempJson.ImportData("Online.json")["Games"].values()
             if not [user, login] in gamesNow and not [login, user] in gamesNow:
                 game = Game([user, login])
-                TempJson.SetUserGame(login, "found")
-                TempJson.SetUserGame(user, "found")
+                TempJson.SetUserGame(login, "inGame")
+                TempJson.SetUserGame(user, "inGame")
                 TempJson.AddGame(game)
+                return redirect(url_for(f"game/{game.code}"), code=302)
 
             return htmlCode
         return "1"
-       
+
+@app.route('/game/<code>')
+def game(code):
+    ipUser = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
+    login = DB.UsersDataBase.GetNameByIp(ipUser)
+    game = TempJson.GetGame(code)
+    status = TempJson.GetStatus(login)
+    board = Board(game["desk"])
+    htmlBoard = board.GetBoardString()
+    oppent = TempJson.GetOpponent(login)
+    htmlCode = open("static/html/startgame.html", "r", encoding="utf-8").read()
+    htmlCode = htmlCode.replace("Ураа, вы нашли игру с user!", f"Вы играете против {oppent}")
+    htmlCode = htmlCode.replace("game", htmlBoard)
+    if request.method == "GET":
+        if status == "move":
+            htmlCode = htmlCode.replace('hidden', 'visible')
+            return htmlCode
+        elif status == "waitingMove":
+            return htmlCode
+
+    elif request.method == "POST":
+        move = request[move]
+        fromCell, toCell = move.split(";")
+
+        move = board.Move(list(map(int, fromCell.split())), list(map(int, toCell.split())))
+        if move:
+            game["desk"] = board.desk
+            TempJson.SetUserGame(login, "waitingMove")
+            TempJson.SetUserGame(oppent, "move")
+            return htmlCode.replace('visible', 'hidden')
+        elif not move:
+            return htmlCode
+        else:
+            return "Мат поставлен!"
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 80))

@@ -4,6 +4,8 @@ import json
 
 from regex import D
 
+from __main__ import game
+
 PATH_TO_JSON_TEMP = "TempUsers.json"
 
 def ImportData(path = PATH_TO_JSON_TEMP):
@@ -11,11 +13,14 @@ def ImportData(path = PATH_TO_JSON_TEMP):
         data = json.load(TempUser)
     return data
 
+def GetGame(code):
+    return ImportData("Online.json")["Games"][code]
+
 def AddGame(Game):
     data = ImportData("Online.json")
     games = data["Games"]
-    games[Game.code] = Game.users
-
+    games[Game.code]["Users"] = Game.users
+    games[Game.code]["Desk"] = Game.Board.desk
     data["Games"] = games
     SaveData(data, "Online.json")
 
@@ -47,7 +52,7 @@ def GetStatus(idUser: str = "NoneIp"):
 def GetOpponent(idUser: str = "None"):
     Games = ImportData("Online.json")["Games"]
 
-    for userone, usertwo in Games.values():
+    for userone, usertwo in Games['Players'].values():
         if userone == idUser:
             return usertwo
         elif usertwo == idUser:

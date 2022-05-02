@@ -3,14 +3,24 @@
 
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="viewport">
 	<link rel="stylesheet" type="text/css" href="/static/css/game.css" />
 	<title>Игра</title>
 </head>
 
 <body>
 	<h1 class = "title_text">Ураа, вы нашли игру с user!</h1>
-	
+	<h2 class = "game_text">game</h2>
+	<h2 class = "game_text">Введите ход в формате 0 1; 0 2 (0 1 - стартовая клетка)</h2>
+	<div>
+		<form class="" method="post">
+			<input type="move" class="field" id="move" placeholder="ход" name="move">
+			<button type="submit"  class="btn btn-primary field">Походить!</button>
+		</form>
+		
+		
+	</div>
+
 </body>
 
 </html>

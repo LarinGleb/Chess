@@ -1,29 +1,64 @@
-from .Pieces import Piece, ValidMove, King
+from dataclasses import replace
+from .Pieces import Bishop, Knight, Pawn, Piece, Queen, Rook, ValidMove, King
 from colorama import init
 from termcolor import colored
 init()
 
 COUNT_CELLS = 8
 
+figures = {'k': Knight,
+           'K': King,
+           'Q': Queen,
+           'P': Pawn,
+           'B':Bishop,
+           'R': Rook}
+
+STANDART_DESK = "RkBQKBkR/PPPPPPPP/......../......../......../......../PPPPPPPP/RkBKQBkR"
+
 class Board():
-    def __init__(self):
+    def __init__(self, game = STANDART_DESK):
         self.BlackPieces = []
         self.WhitePieces = []
         self.AllPieces = []
+        currentRow = 0
+        currentColumn = 0
+        self.desk = game.split("/")
+        for row in self.desk:
+            
+            for figure in row:
+                if figure != ".": 
+                    color = 1 if "w" in figure else -1 
+                    symbol = figure.replace('b', '').replace('w', '')
+                    figure = figures[symbol]([currentColumn, currentRow], self, color)
+                    if color == 1:
+                        self.WhitePieces.append(figure)
+                    else:
+                        self.BlackPieces.append(figure)
+                    self.AllPieces.append(figure)
+
+                    if symbol == 'K':
+                        if color == -1:
+                            self.BlackK = figure
+                        else:
+                            self.WhiteK = figure
+
+                currentColumn += 1
+
+            currentRow  += 1
         
-        self.WhiteK = None
-        self.BlackK = None
-        
-    def VisualiseBoard(self):
+    def GetBoardString(self):
+        boardString = ""
         for i in range(COUNT_CELLS):
             for j in range(COUNT_CELLS):
                 figure = self.GetPiece([j, i])
                 if figure:
-                    color = "white" if figure.colour == 1 else "cyan"
-                    print(colored(figure.symbol, color) + " ", end="")
+                    color = "w" if figure.colour == 1 else "n"
+                    boardString += (figure.symbol + color)
                 else:
-                    print("☐ ", end="")
-            print()
+                    boardString += "☐ "
+            boardString += "\n"
+        
+        return boardString
     
     def GetPiece(self, Coords):
         for piece in self.AllPieces:
@@ -37,7 +72,6 @@ class Board():
             colourMove = figureMove.colour
             figureEat = self.GetPiece(To)
             enemyPieces = self.WhitePieces if colourMove == -1 else self.BlackPieces
-
             if figureMove.CanMove(To):
                 figureMove.Position = To
                 if figureEat != None:
@@ -47,10 +81,20 @@ class Board():
                     figureMove.Position = From
                     if figureEat != None:
                         enemyPieces.append(figureEat)
+                        return False
+
+                if self.CheckMate(-1 if colourMove == 1 else 1):
+                    return "Мат!"
+
+                self.desk[figureMove.Position[1]][figureMove.Position[0]] = "☐ "
+                color = "w" if figureMove.colour == 1 else "n"
+                self.desk[To[1]][To[0]] = color + figureMove.symbol
+                return True
             else:
-                print("Uncorect move")
+                return False
         else:
-            print("None Figure")
+            return False
+        
 
     def CheckShah(self, colour, moveKing = [0, 0]):
         king = self.WhiteK if colour == 1 else self.BlackK
