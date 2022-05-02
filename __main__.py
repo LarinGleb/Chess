@@ -100,7 +100,7 @@ def StartGame():
             return htmlCode
         return "1"
 
-@app.route('/game/<code>')
+@app.route('/game/<code>', methods = ['POST', 'GET'])
 def game(code):
     ipUser = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
     login = DB.UsersDataBase.GetNameByIp(ipUser)
