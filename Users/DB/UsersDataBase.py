@@ -1,8 +1,8 @@
 
+import os
 import sqlite3
 import datetime
-
-connection = sqlite3.connect("Users/DB/Users.db", check_same_thread=False)
+connection = sqlite3.connect("Users.db", check_same_thread=False)
 cursor = connection.cursor()
 
 def AddUser(Ip: str="0.0.0.0.0", User: str = "DefaultUser", Password: str="DefaultPassword", Gmail: str ="example@domen"):

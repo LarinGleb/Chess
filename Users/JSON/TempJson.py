@@ -1,10 +1,5 @@
 
-from curses.ascii import US
 import json
-
-from regex import D
-
-from __main__ import game
 
 PATH_TO_JSON_TEMP = "TempUsers.json"
 
